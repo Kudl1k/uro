@@ -1,8 +1,11 @@
+import io
 from tkinter import *
 import tkinter.font
 from tkinter import messagebox
 from tkinter import ttk
 from data import *
+from PIL import Image, ImageTk
+
 
 class myApp:
     category = ""
@@ -82,7 +85,7 @@ class myApp:
         # Add horizontal scrollbar to the Treeview widget
         self.hsb = ttk.Scrollbar(self.product_frame, orient="horizontal", command=self.tree.xview)
         self.tree.configure(xscrollcommand=self.hsb.set)
-        self.tree.bind("<<TreeviewOpen>>", self.openProductWindow)
+        self.tree.bind("<Double-1>", self.openProductWindow)
 
     def getProducts(self):
         self.tree.delete(*self.tree.get_children())
@@ -99,26 +102,70 @@ class myApp:
                 ))
 
     def openProductWindow(self, event):
-        print("called")
-        item = self.tree.selection()[0]
-        product_id = self.tree.item(item, "text")
-        product = next((p for p in products if p["id"] == product_id), None)
-        if product:
-            new_window = Toplevel()
-            new_window.title(f"Product: {product['title']}")
-            new_window.geometry('400x300')
-            new_window.resizable(True, True)
-            new_window.minsize(400, 300)
+        item_id = self.tree.focus()
+        if item_id:
+            # Retrieve the actual index of the item in the list
+            item_index = self.tree.index(item_id)
+            # Retrieve the item data
+            product = products[item_index]
+            if product:
+                print(product)
+                new_window = Toplevel()
+                new_window.title(f"Product: {product['title']}")  # Assuming the first value is the title
+                new_window.geometry('400x480')
+                new_window.resizable(False, False)  # Make the window non-resizable
 
-            # Add labels and entry widgets for the product details
-            for i, (key, value) in enumerate(product.items()):
-                label = Label(new_window, text=f"{key}:")
-                label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
-                entry = Entry(new_window, state="readonly")
-                entry.insert(END, value)
-                entry.grid(row=i, column=1, sticky="w", padx=10, pady=5)
+                info_frame = LabelFrame(new_window, text="Info")
+                info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
+
+                # Define the labels for the product details
+                labels = ['Title', 'Description', 'Price', 'Rating', 'Stock', 'Brand', 'Category']
+
+                # Add labels and entry widgets for the product details
+                for i, label_text in enumerate(labels):
+                    label = Label(info_frame, text=f"{label_text}:")
+                    label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
+                    # Use StringVar for the Entry widget
+                    value_var = StringVar()
+                    value_var.set(product[label_text.lower()])
+                    entry = Entry(info_frame, textvariable=value_var, state="readonly")
+                    entry.grid(row=i, column=1, sticky="w", padx=10, pady=5)
+
+                image_frame = LabelFrame(new_window, text="Images")
+                image_frame.pack(side=BOTTOM, fill=BOTH, padx=10, pady=10, expand=True)
+                image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
+
+                scrollbar = Scrollbar(image_frame, orient=HORIZONTAL)
+                scrollbar.pack(side=BOTTOM, fill=X)
+
+                # Create a canvas and a frame inside the canvas
+                canvas = Canvas(image_frame, width=380, height=100, xscrollcommand=scrollbar.set)
+                frame = Frame(canvas)
+                scrollbar.config(command=canvas.xview)
+                canvas.create_window((0, 0), window=frame, anchor="nw")
 
 
+
+                # Add image labels to the frame
+                img_labels = []
+                img_width = 0
+                img_height = 0
+                for i, image_url in enumerate(product['images']):
+                    response = requests.get(image_url)
+                    img_data = response.content
+                    img = Image.open(io.BytesIO(img_data))
+                    img.thumbnail((100, 200))  # Resize the image to fit the frame
+                    img = ImageTk.PhotoImage(img)
+                    img_label = Label(frame, image=img)
+                    img_label.image = img  # Keep a reference to the image object
+                    img_label.grid(row=0, column=i, padx=5, pady=5)  # Use grid for the image labels
+                    img_labels.append(img_label)
+                    img_width += img.width()  # Add the width of the image to the total width
+                    img_height = max(img_height, img.height())  # Update the maximum height
+
+                # Update the scroll region of the canvas
+                canvas.config(scrollregion=(0, 0, img_width, img_height))
+                canvas.pack(side=LEFT, fill=BOTH, expand=True)
 root = Tk()
 app = myApp(root)
 root.mainloop()
