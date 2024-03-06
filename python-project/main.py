@@ -28,6 +28,8 @@ class myApp:
         self.category_filter_frame.pack(side=LEFT, padx=5)
         self.sort_type_filter.pack(side=LEFT)
         self.sort_type_filter_frame.pack(side=LEFT, padx=5)
+        self.add_product_frame.pack(side=LEFT)
+        self.add_product_button.pack(side=LEFT,padx=5)
         self.tree.pack(fill=BOTH, expand=True)
         self.hsb.pack(side="bottom", fill="x")
 
@@ -53,6 +55,10 @@ class myApp:
             values=self.sort_type,
         )
         self.category_filter.bind("<<ComboboxSelected>>", self.setCategory)
+
+        self.add_product_frame = Frame(self.filters_frame)
+        self.add_product_button = Button(self.add_product_frame,text="Add Product",command=self.openAddWindow())
+
 
     def setCategory(self, event):
         self.category = self.category_filter.get()
@@ -166,6 +172,36 @@ class myApp:
                 # Update the scroll region of the canvas
                 canvas.config(scrollregion=(0, 0, img_width, img_height))
                 canvas.pack(side=LEFT, fill=BOTH, expand=True)
+
+
+    def openAddWindow(self):
+        new_window = Toplevel()
+        new_window.title("Add product")  # Assuming the first value is the title
+        new_window.geometry('400x480')
+        new_window.resizable(False, False)  # Make the window non-resizable
+
+        info_frame = LabelFrame(new_window, text="Info")
+        info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
+
+        # Define the labels for the product details
+        labels = ['Title', 'Description', 'Price', 'Rating', 'Stock', 'Brand', 'Category']
+
+        # Add labels and entry widgets for the product details
+        for i, label_text in enumerate(labels):
+            label = Label(info_frame, text=f"{label_text}:")
+            label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
+            # Use StringVar for the Entry widget
+            entry = Entry(info_frame)
+            entry.grid(row=i, column=1, sticky="w", padx=10, pady=5)
+        
+        buttons_frame = Frame(new_window)
+        buttons_frame.pack(side=TOP,anchor=S,fill=X,padx=10,pady=10)
+
+        add_button = Button(buttons_frame,text="Add product")
+        add_button.pack()
+        add_photos_button = Button(buttons_frame,text="Add Photos")
+        add_photos_button.pack()
+
 root = Tk()
 app = myApp(root)
 root.mainloop()
