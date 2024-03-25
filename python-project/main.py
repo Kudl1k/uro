@@ -15,8 +15,8 @@ class myApp:
     def __init__(self, root):
         root.title('Shop system')
         root.resizable(True, True)
-        root.geometry('640x480')
-        root.minsize(640, 480)
+        root.geometry('800x480')
+        root.minsize(800, 480)
         self.main_frame = Frame(root)
         self.filters_frame = Frame(self.main_frame)
         self.setup_filters(root)
@@ -61,6 +61,39 @@ class myApp:
         self.add_product_frame = Frame(self.filters_frame)
         self.add_product_button = Button(self.add_product_frame,text="Add Product",command=self.openAddWindow)
 
+        # Create a new LabelFrame for the search controls
+        search_frame = LabelFrame(self.filters_frame, text="Search")
+        search_frame.pack(side=RIGHT, padx=10)
+
+        # Define the categories
+        categories = ['All', 'Title', 'Description', 'Price', 'Stock', 'Brand', 'Category', 'Placement']
+
+        # Create a StringVar for the selected category
+        self.selected_category = StringVar()
+        self.selected_category.set(categories[0])  # Set the default category to 'All'
+
+        # Create an OptionMenu for category selection
+        category_menu = OptionMenu(search_frame, self.selected_category, *categories)
+        category_menu.pack(side=LEFT, padx=10)
+
+        # Create an Entry widget for the search query
+        self.search_query = Entry(search_frame)
+        self.search_query.pack(side=LEFT, padx=10)
+
+        # Create a search button
+        search_button = Button(search_frame, text="Search", command=self.search_products)
+        search_button.pack(side=LEFT, padx=10)
+
+    def search_products(self):
+        # Get the selected category and the search query
+        category = self.selected_category.get()
+        query = self.search_query.get()
+
+        # Filter the products
+        filtered_products = [product for product in self.getProducts() if product[category].lower().contains(query.lower())]
+
+        # Update the product frame with the filtered products
+        self.update_product_frame(filtered_products)
 
     def setCategory(self, event):
         self.category = self.category_filter.get()
@@ -113,6 +146,7 @@ class myApp:
                 )
                 self.formatted_products.append(formatted_product)  # Append the formatted product to the list
                 self.tree.insert("", END, text=product["id"], values=formatted_product)
+        return self.formatted_products  # Return the list of formatted products
 
 
     def openProductWindow(self, event):
