@@ -5,6 +5,8 @@ from tkinter import messagebox
 from tkinter import ttk
 from data import *
 from PIL import Image, ImageTk
+import random
+import string
 
 
 class myApp:
@@ -57,7 +59,7 @@ class myApp:
         self.category_filter.bind("<<ComboboxSelected>>", self.setCategory)
 
         self.add_product_frame = Frame(self.filters_frame)
-        self.add_product_button = Button(self.add_product_frame,text="Add Product",command=self.openAddWindow())
+        self.add_product_button = Button(self.add_product_frame,text="Add Product",command=self.openAddWindow)
 
 
     def setCategory(self, event):
@@ -67,15 +69,15 @@ class myApp:
 
     def setupTreeView(self, root):
         self.tree = ttk.Treeview(self.product_frame,
-                                 columns=("Title", "Description", "Price", "Rating", "Stock", "Brand", "Category"))
+                                columns=("Title", "Description", "Price", "Stock", "Brand", "Category", "Placement"))
         self.tree.heading("#0", text="ID")
         self.tree.heading("Title", text="Title")
         self.tree.heading("Description", text="Description")
         self.tree.heading("Price", text="Price")
-        self.tree.heading("Rating", text="Rating")
         self.tree.heading("Stock", text="Stock")
         self.tree.heading("Brand", text="Brand")
         self.tree.heading("Category", text="Category")
+        self.tree.heading("Placement", text="Placement")  # Placement column moved to the end
 
         self.getProducts()
 
@@ -83,10 +85,10 @@ class myApp:
         self.tree.column("Title", minwidth=100, width=100)
         self.tree.column("Description", minwidth=100, width=100)
         self.tree.column("Price", minwidth=50, width=50, stretch=False)
-        self.tree.column("Rating", minwidth=50, width=50, stretch=False)
         self.tree.column("Stock", minwidth=50, width=50, stretch=False)
         self.tree.column("Brand", minwidth=50, width=50)
         self.tree.column("Category", minwidth=50, width=100)
+        self.tree.column("Placement", minwidth=50, width=50, stretch=False)  # Placement column moved to the end
 
         # Add horizontal scrollbar to the Treeview widget
         self.hsb = ttk.Scrollbar(self.product_frame, orient="horizontal", command=self.tree.xview)
@@ -95,17 +97,23 @@ class myApp:
 
     def getProducts(self):
         self.tree.delete(*self.tree.get_children())
+        self.formatted_products = []  # Define a new list to store the formatted products
         for product in products:
             if self.category == "" or product["category"] == self.category:
-                self.tree.insert("", END, text=product["id"], values=(
+                # Generate random placement
+                placement = random.choice(string.ascii_uppercase[:4]) + str(random.randint(1, 5))
+                formatted_product = (
                     product["title"],
                     product["description"],
                     product["price"],
-                    product["rating"],
                     product["stock"],
                     product["brand"],
-                    product["category"]
-                ))
+                    product["category"],
+                    placement
+                )
+                self.formatted_products.append(formatted_product)  # Append the formatted product to the list
+                self.tree.insert("", END, text=product["id"], values=formatted_product)
+
 
     def openProductWindow(self, event):
         item_id = self.tree.focus()
@@ -113,11 +121,11 @@ class myApp:
             # Retrieve the actual index of the item in the list
             item_index = self.tree.index(item_id)
             # Retrieve the item data
-            product = products[item_index]
+            product = self.formatted_products[item_index]
             if product:
                 print(product)
                 new_window = Toplevel()
-                new_window.title(f"Product: {product['title']}")  # Assuming the first value is the title
+                new_window.title("Add product")  # Assuming the first value is the title
                 new_window.geometry('400x480')
                 new_window.resizable(False, False)  # Make the window non-resizable
 
@@ -125,7 +133,10 @@ class myApp:
                 info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
 
                 # Define the labels for the product details
-                labels = ['Title', 'Description', 'Price', 'Rating', 'Stock', 'Brand', 'Category']
+                labels = ['Title', 'Description', 'Price', 'Stock', 'Brand', 'Category' , 'Placement']
+
+                # Map labels to indices
+                label_to_index = {label.lower(): index for index, label in enumerate(labels)}
 
                 # Add labels and entry widgets for the product details
                 for i, label_text in enumerate(labels):
@@ -133,8 +144,8 @@ class myApp:
                     label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
                     # Use StringVar for the Entry widget
                     value_var = StringVar()
-                    value_var.set(product[label_text.lower()])
-                    entry = Entry(info_frame, textvariable=value_var, state="readonly")
+                    value_var.set(product[label_to_index[label_text.lower()]])
+                    entry = Entry(info_frame,state="readonly",textvariable=value_var)
                     entry.grid(row=i, column=1, sticky="w", padx=10, pady=5)
 
                 image_frame = LabelFrame(new_window, text="Images")
@@ -156,7 +167,7 @@ class myApp:
                 img_labels = []
                 img_width = 0
                 img_height = 0
-                for i, image_url in enumerate(product['images']):
+                for i, image_url in enumerate(products[item_index]['images']):
                     response = requests.get(image_url)
                     img_data = response.content
                     img = Image.open(io.BytesIO(img_data))
@@ -170,7 +181,9 @@ class myApp:
                     img_height = max(img_height, img.height())  # Update the maximum height
 
                 # Update the scroll region of the canvas
-                canvas.config(scrollregion=(0, 0, img_width, img_height))
+                canvas.config(scrollregion=(0, 0, img_width + 100, img_height))
+                # Update the width of the canvas
+                canvas.config(width=img_width)
                 canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
 
@@ -184,7 +197,7 @@ class myApp:
         info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
 
         # Define the labels for the product details
-        labels = ['Title', 'Description', 'Price', 'Rating', 'Stock', 'Brand', 'Category']
+        labels = ['Title', 'Description', 'Price', 'Stock', 'Brand', 'Category' , 'Placement']
 
         # Add labels and entry widgets for the product details
         for i, label_text in enumerate(labels):
