@@ -3,6 +3,7 @@ from tkinter import *
 import tkinter.font
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import filedialog
 from data import *
 from PIL import Image, ImageTk
 import random
@@ -183,7 +184,7 @@ class myApp:
                     entry.insert(0, self.formatted_products[item_index][i])
                     self.entries[label_text.lower()] = entry
                 image_frame = LabelFrame(self.new_window, text="Images")
-                image_frame.pack(side=BOTTOM, fill=BOTH, padx=10, pady=10, expand=True)
+                image_frame.pack(side= TOP, fill=BOTH, padx=10, pady=10, expand=True)
                 image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
 
                 scrollbar = Scrollbar(image_frame, orient=HORIZONTAL)
@@ -195,7 +196,7 @@ class myApp:
                 scrollbar.config(command=canvas.xview)
                 canvas.create_window((0, 0), window=frame, anchor="nw")
                 save_button = Button(self.new_window, text="Save", command=self.saveProduct)
-                save_button.pack(side=BOTTOM)
+                save_button.pack(side=BOTTOM,pady=10)
 
 
 
@@ -246,13 +247,24 @@ class myApp:
             entry.grid(row=i, column=1, sticky="ew", padx=10, pady=5)
             self.entries[label_text.lower()] = entry
 
-        buttons_frame = Frame(self.new_window)
-        buttons_frame.pack(side=TOP,anchor=S,fill=X,padx=10,pady=10)
+        image_frame = LabelFrame(self.new_window, text="Images")
+        image_frame.pack(side=TOP, fill=BOTH, padx=10, pady=10, expand=True)
+        image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
+        canvas = Canvas(image_frame, width=380, height=100)
+        frame = Frame(canvas)
+        canvas.create_window((0, 0), window=frame, anchor="nw")
+        canvas.config(scrollregion=(0, 0, 380, 100))
+        # Update the width of the canvas
+        canvas.config(width=380)
+        canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
+        buttons_frame = Frame(self.new_window)
+        buttons_frame.pack(side=BOTTOM,anchor=S,fill=X,padx=10,pady=10)
+        add_photos_button = Button(buttons_frame,text="Add Photos",command=self.loadPhotos)
+        add_photos_button.pack()
         add_button = Button(buttons_frame,text="Add product", command=self.addProduct)
         add_button.pack()
-        add_photos_button = Button(buttons_frame,text="Add Photos")
-        add_photos_button.pack()
+        
 
     def addProduct(self):
         title = self.entries['title'].get()
@@ -294,6 +306,10 @@ class myApp:
                 product["placement"] = self.entries['placement'].get()
                 self.getProducts()
                 self.new_window.destroy()
+
+    def loadPhotos(self):
+        file_paths = filedialog.askopenfilenames(filetypes=[('Image Files', '*.png;*.jpg;*.jpeg')])
+        messagebox.showerror("Error", "Could not load the files")
 
 
 root = Tk()
