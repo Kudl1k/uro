@@ -8,6 +8,7 @@ from data import *
 from PIL import Image, ImageTk
 import random
 import string
+import re
 
 
 class myApp:
@@ -250,6 +251,13 @@ class myApp:
             entry.grid(row=i, column=1, sticky="ew", padx=10, pady=5)
             self.entries[label_text.lower()] = entry
 
+        self.entries['title'].insert(0,'New Product')
+        self.entries['price'].insert(0,'100')
+        self.entries['stock'].insert(0,'100')
+        self.entries['brand'].insert(0,'Apple')
+        self.entries['category'].insert(0,'smartphones')
+        self.entries['placement'].insert(0,'A1')
+
         image_frame = LabelFrame(self.new_window, text="Images")
         image_frame.pack(side=TOP, fill=BOTH, padx=10, pady=10, expand=True)
         image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
@@ -271,11 +279,31 @@ class myApp:
 
     def addProduct(self):
         title = self.entries['title'].get()
+        if title == "":
+            messagebox.showerror("Error", "Title should not be empty")
+            return
         price = self.entries['price'].get()
+        try:
+            float(price)
+        except ValueError:
+            messagebox.showerror("Invalid Price", "Please enter a valid number for price.")
+        
         stock = self.entries['stock'].get()
+        try:
+            float(stock)
+        except ValueError:
+            messagebox.showerror("Invalid Stock", "Please enter a valid number for stock.")
         brand = self.entries['brand'].get()
+        if brand == "":
+            messagebox.showerror("Error", "Brand should not be empty")
+            return
         category = self.entries['category'].get()
+        if category == "":
+            messagebox.showerror("Error", "Category should not be empty")
+            return
         placement = self.entries['placement'].get()
+        if not re.match("^[A-D][1-5]$", placement):
+            messagebox.showerror("Error", "Placement shoudl start with letter from A-D and end with number from 1-5")
 
         # Create a new product
         new_product = {
@@ -288,6 +316,7 @@ class myApp:
             "placement": placement,
             "images": []  # You can add functionality to add images later
         }
+
 
         # Add the new product to the products list
         products.append(new_product)
