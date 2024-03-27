@@ -140,6 +140,7 @@ class myApp:
             if (self.category == "" or product["category"] == self.category) and (self.search_query is None or any(self.search_query.get().lower() in str(value).lower() for value in product.values())):
                 # Generate random placement
                 formatted_product = (
+                    product['id'],
                     product["title"],
                     product["price"],
                     product["stock"],
@@ -155,11 +156,14 @@ class myApp:
 
     def openProductWindow(self, event):
         item_id = self.tree.focus()
+        print(item_id)
         if item_id:
             # Retrieve the actual index of the item in the list
-            item_index = self.tree.index(item_id)
+            item = self.tree.item(item_id)
+            print(item)
+            item_index = item['text']-1
             # Retrieve the item data
-            product = self.formatted_products[item_index]
+            product = products[item_index]
             if product:
                 print(product)
                 self.new_window = Toplevel()
@@ -172,7 +176,6 @@ class myApp:
                 info_frame.grid_columnconfigure(1, weight=1)  # Add this line
 
                 labels = ['Title', 'Price', 'Stock', 'Brand', 'Category' , 'Placement']
-
                 # Initialize the dictionary to store the Entry widgets
                 self.entries = {}
 
@@ -181,7 +184,7 @@ class myApp:
                     label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
                     entry = Entry(info_frame)
                     entry.grid(row=i, column=1, sticky="ew", padx=10, pady=5)
-                    entry.insert(0, self.formatted_products[item_index][i])
+                    entry.insert(0, products[item_index][label_text.lower()])
                     self.entries[label_text.lower()] = entry
                 image_frame = LabelFrame(self.new_window, text="Images")
                 image_frame.pack(side= TOP, fill=BOTH, padx=10, pady=10, expand=True)
@@ -204,7 +207,7 @@ class myApp:
                 img_labels = []
                 img_width = 0
                 img_height = 0
-                for i, image_url in enumerate(self.formatted_products[item_index][6]):
+                for i, image_url in enumerate(products[item_index]['images']):
                     response = requests.get(image_url)
                     img_data = response.content
                     img = Image.open(io.BytesIO(img_data))
@@ -291,6 +294,7 @@ class myApp:
 
         # Refresh the product list
         self.getProducts()
+        self.new_window.destroy()
 
     def saveProduct(self):
         item_id = self.tree.focus()
