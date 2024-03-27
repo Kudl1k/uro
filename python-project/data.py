@@ -11,9 +11,9 @@ unformated_products = json.loads(response_API.text)['products']
 
 products = []
 for product in unformated_products:
-    # Generate random placement
-    placement = str(random.randint(1, 5)) + random.choice(string.ascii_uppercase[:4])
+    placement = str(random.choice(string.ascii_uppercase[:4])) + str(random.randint(1, 5))
     formatted_product = {
+        "index" : len(products),
         "id": product["id"],
         "title": product["title"],
         "description": product["description"],

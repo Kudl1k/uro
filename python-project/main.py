@@ -26,12 +26,11 @@ class myApp:
         self.setupTreeView(root)
         menu_bar = Menu(root)
         root.config(menu=menu_bar)
+        self.highest_id = len(products) + 1
 
-        # Create an "Info" menu
         info_menu = Menu(menu_bar, tearoff=0)
         menu_bar.add_cascade(label="Info", menu=info_menu)
 
-        # Add items to the "Info" menu
         info_menu.add_command(label="About", command=self.showAbout)
         info_menu.add_command(label="Help", command=self.showHelp)
 
@@ -41,8 +40,9 @@ class myApp:
         self.category_filter.pack(side=LEFT)
         self.category_filter_frame.pack(side=LEFT, padx=5)
 
-        self.add_product_frame.pack(side=LEFT)
-        self.add_product_button.pack(side=LEFT,padx=5)
+        self.add_product_button_label.pack(side=RIGHT,fill=Y)
+        self.add_product_button.pack(side=RIGHT,padx=10)
+
         self.tree.pack(fill=BOTH, expand=True)
         self.hsb.pack(side="bottom", fill="x")
 
@@ -64,30 +64,24 @@ class myApp:
             values=self.categories,
         )
         self.category_filter.bind("<<ComboboxSelected>>", self.setCategory)
+        self.add_product_button_label = Label(self.filters_frame)
+        self.add_product_button = Button(self.add_product_button_label,text="Add Product",command=self.openAddWindow)
 
-        self.add_product_frame = Frame(self.filters_frame)
-        self.add_product_button = Button(self.add_product_frame,text="Add Product",command=self.openAddWindow)
-
-        # Create a new LabelFrame for the search controls
         search_frame = LabelFrame(self.filters_frame, text="Search")
-        search_frame.pack(side=RIGHT, padx=10)
+        search_frame.pack(side=LEFT, padx=10)
 
-        # Define the categories
         categories = ['All', 'Title', 'Price', 'Stock', 'Brand', 'Category', 'Placement']
 
-        # Create a StringVar for the selected category
         self.selected_category = StringVar()
-        self.selected_category.set(categories[0])  # Set the default category to 'All'
+        self.selected_category.set(categories[0])
 
-        # Create an OptionMenu for category selection
+   
         category_menu = OptionMenu(search_frame, self.selected_category, *categories)
         category_menu.pack(side=LEFT, padx=10)
 
-        # Create an Entry widget for the search query
         self.search_query = Entry(search_frame)
         self.search_query.pack(side=LEFT, padx=10)
 
-        # Create a search button
         search_button = Button(search_frame, text="Search", command=self.setCategory)
         search_button.pack(side=LEFT, padx=10)
 
@@ -101,15 +95,12 @@ class myApp:
         l = [(int(self.tree.item(k, 'text')), k) if col == "#0" else (self.tree.set(k, col), k) for k in self.tree.get_children('')]
         l.sort(reverse=reverse)
 
-        # rearrange items in sorted positions
         for index, (val, k) in enumerate(l):
             self.tree.move(k, '', index)
 
-        # reverse sort next time
         self.tree.heading(col, command=lambda: self.sort_column(col, not reverse) if col != "#0" else self.sort_column("#0", not reverse))
     def setupTreeView(self, root):
-        self.tree = ttk.Treeview(self.product_frame,
-                                columns=("Title", "Price", "Stock", "Brand", "Category", "Placement"))
+        self.tree = ttk.Treeview(self.product_frame, columns=("Title", "Price", "Stock", "Brand", "Category", "Placement"))
         self.tree.heading("#0", text="ID", command=lambda: self.sort_column("#0", False))
         self.tree.heading("Title", text="Title", command=lambda: self.sort_column("Title", False))
         self.tree.heading("Price", text="Price", command=lambda: self.sort_column("Price", False))
@@ -126,21 +117,19 @@ class myApp:
         self.tree.column("Stock", minwidth=50, width=50, stretch=False)
         self.tree.column("Brand", minwidth=50, width=50)
         self.tree.column("Category", minwidth=100, width=100,stretch=False)
-        self.tree.column("Placement", minwidth=50, width=100, stretch=False)  # Placement column moved to the end
+        self.tree.column("Placement", minwidth=50, width=100, stretch=False) 
 
-        # Add horizontal scrollbar to the Treeview widget
         self.hsb = ttk.Scrollbar(self.product_frame, orient="horizontal", command=self.tree.xview)
         self.tree.configure(xscrollcommand=self.hsb.set)
         self.tree.bind("<Double-1>", self.openProductWindow)
 
     def getProducts(self):
         self.tree.delete(*self.tree.get_children())
-        self.formatted_products = []  # Define a new list to store the formatted products
+        self.formatted_products = [] 
         for product in products:
-            # Check if the search query is in any of the product fields
             if (self.category == "" or product["category"] == self.category) and (self.search_query is None or any(self.search_query.get().lower() in str(value).lower() for value in product.values())):
-                # Generate random placement
                 formatted_product = (
+                    product['index'],
                     product['id'],
                     product["title"],
                     product["price"],
@@ -150,34 +139,32 @@ class myApp:
                     product["placement"],
                     product['images']
                 )
-                self.formatted_products.append(formatted_product)  # Append the formatted product to the list
-                self.tree.insert('', 'end', text=int(product["id"]), values=(product["title"], product["price"], product["stock"], product["brand"], product["category"], product["placement"],product['images']))
-        return self.formatted_products  # Return the list of formatted products
+                self.formatted_products.append(formatted_product) 
+                self.tree.insert('', 'end', text=int(product["id"]), values=(product["title"], product["price"], product["stock"], product["brand"], product["category"], product["placement"],product['images'],int(product['index'])))
+        return self.formatted_products 
 
 
     def openProductWindow(self, event):
         item_id = self.tree.focus()
         print(item_id)
         if item_id:
-            # Retrieve the actual index of the item in the list
             item = self.tree.item(item_id)
             print(item)
-            item_index = item['text']-1
-            # Retrieve the item data
+            item_index = item['values'][7]
             product = products[item_index]
             if product:
                 print(product)
+                self.selected_product = product
                 self.new_window = Toplevel()
-                self.new_window.title("Add product")  # Assuming the first value is the title
+                self.new_window.title("Edit product")
                 self.new_window.geometry('400x480')
-                self.new_window.resizable(False, False)  # Make the window non-resizable
+                self.new_window.resizable(False, False)
 
                 info_frame = LabelFrame(self.new_window, text="Info")
                 info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
-                info_frame.grid_columnconfigure(1, weight=1)  # Add this line
+                info_frame.grid_columnconfigure(1, weight=1)
 
                 labels = ['Title', 'Price', 'Stock', 'Brand', 'Category' , 'Placement']
-                # Initialize the dictionary to store the Entry widgets
                 self.entries = {}
 
                 for i, label_text in enumerate(labels):
@@ -187,24 +174,29 @@ class myApp:
                     entry.grid(row=i, column=1, sticky="ew", padx=10, pady=5)
                     entry.insert(0, products[item_index][label_text.lower()])
                     self.entries[label_text.lower()] = entry
+
+                add_photos_button = Button(self.new_window,text="Edit Photos",command=self.loadPhotos)
+                add_photos_button.pack(side=TOP)
                 image_frame = LabelFrame(self.new_window, text="Images")
                 image_frame.pack(side= TOP, fill=BOTH, padx=10, pady=10, expand=True)
-                image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
+                image_frame.grid_rowconfigure(0, weight=1) 
 
                 scrollbar = Scrollbar(image_frame, orient=HORIZONTAL)
                 scrollbar.pack(side=BOTTOM, fill=X)
-
-                # Create a canvas and a frame inside the canvas
+                
                 canvas = Canvas(image_frame, width=380, height=100, xscrollcommand=scrollbar.set)
                 frame = Frame(canvas)
                 scrollbar.config(command=canvas.xview)
                 canvas.create_window((0, 0), window=frame, anchor="nw")
-                save_button = Button(self.new_window, text="Save", command=self.saveProduct)
-                save_button.pack(side=BOTTOM,pady=10)
+                buttons_frame = Frame(self.new_window)
+                buttons_frame.pack(side=BOTTOM)
+                save_button = Button(buttons_frame, text="Save", command=self.saveProduct,width=10)
+                save_button.pack(side=LEFT,pady=10,padx=5)
+                remove_button = Button(buttons_frame, text="Remove", command=self.removeProduct,width=10)
+                remove_button.pack(side=RIGHT, pady=10,padx=5)
 
 
 
-                # Add image labels to the frame
                 img_labels = []
                 img_width = 0
                 img_height = 0
@@ -212,20 +204,26 @@ class myApp:
                     response = requests.get(image_url)
                     img_data = response.content
                     img = Image.open(io.BytesIO(img_data))
-                    img.thumbnail((100, 200))  # Resize the image to fit the frame
+                    img.thumbnail((100, 200)) 
                     img = ImageTk.PhotoImage(img)
                     img_label = Label(frame, image=img)
-                    img_label.image = img  # Keep a reference to the image object
-                    img_label.grid(row=0, column=i, padx=5, pady=5)  # Use grid for the image labels
+                    img_label.image = img 
+                    img_label.grid(row=0, column=i, padx=5, pady=5)
                     img_labels.append(img_label)
-                    img_width += img.width()  # Add the width of the image to the total width
-                    img_height = max(img_height, img.height())  # Update the maximum height
+                    img_width += img.width()
+                    img_height = max(img_height, img.height())
 
-                # Update the scroll region of the canvas
                 canvas.config(scrollregion=(0, 0, img_width + 100, img_height))
-                # Update the width of the canvas
                 canvas.config(width=img_width)
                 canvas.pack(side=LEFT, fill=BOTH, expand=True)
+    def removeProduct(self):
+        if self.selected_product:
+            confirm = messagebox.askyesno("Confirmation", "Are you sure you want to delete this product?")
+            if confirm:
+                products.remove(self.selected_product)
+                self.getProducts()
+                messagebox.showinfo("Success", "Product successfully deleted")
+                self.new_window.destroy()
 
 
     def openAddWindow(self):
@@ -237,11 +235,10 @@ class myApp:
         info_frame = LabelFrame(self.new_window, text="Info")
         info_frame.pack(side=TOP, anchor=NW, fill=X, padx=10, pady=10)
 
-        info_frame.grid_columnconfigure(1, weight=1)  # Add this line
+        info_frame.grid_columnconfigure(1, weight=1)
 
         labels = ['Title', 'Price', 'Stock', 'Brand', 'Category' , 'Placement']
 
-        # Initialize the dictionary to store the Entry widgets
         self.entries = {}
 
         for i, label_text in enumerate(labels):
@@ -258,21 +255,21 @@ class myApp:
         self.entries['category'].insert(0,'smartphones')
         self.entries['placement'].insert(0,'A1')
 
+        add_photos_button = Button(self.new_window,text="Add Photos",command=self.loadPhotos)
+        add_photos_button.pack(side=TOP)
         image_frame = LabelFrame(self.new_window, text="Images")
         image_frame.pack(side=TOP, fill=BOTH, padx=10, pady=10, expand=True)
-        image_frame.grid_rowconfigure(0, weight=1)  # Set the weight of the row containing the images to 1
+        image_frame.grid_rowconfigure(0, weight=1)
         canvas = Canvas(image_frame, width=380, height=100)
         frame = Frame(canvas)
         canvas.create_window((0, 0), window=frame, anchor="nw")
         canvas.config(scrollregion=(0, 0, 380, 100))
-        # Update the width of the canvas
+
         canvas.config(width=380)
         canvas.pack(side=LEFT, fill=BOTH, expand=True)
 
         buttons_frame = Frame(self.new_window)
         buttons_frame.pack(side=BOTTOM,anchor=S,fill=X,padx=10,pady=10)
-        add_photos_button = Button(buttons_frame,text="Add Photos",command=self.loadPhotos)
-        add_photos_button.pack()
         add_button = Button(buttons_frame,text="Add product", command=self.addProduct)
         add_button.pack()
         
@@ -304,24 +301,26 @@ class myApp:
         placement = self.entries['placement'].get()
         if not re.match("^[A-D][1-5]$", placement):
             messagebox.showerror("Error", "Placement shoudl start with letter from A-D and end with number from 1-5")
+            return
 
-        # Create a new product
+
         new_product = {
-            "id": len(products) + 1,  # Add this line
+            "index": len(products),
+            "id": self.highest_id,
             "title": title,
             "price": price,
             "stock": stock,
             "brand": brand,
             "category": category,
             "placement": placement,
-            "images": []  # You can add functionality to add images later
+            "images": []
         }
+        
+        self.highest_id += 1
 
 
-        # Add the new product to the products list
         products.append(new_product)
 
-        # Refresh the product list
         self.getProducts()
         self.new_window.destroy()
 
