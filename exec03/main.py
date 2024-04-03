@@ -10,7 +10,6 @@ class App:
         self.createTable()
         self.createForm()
         self.createButtons()       
-    
 
     def createTable(self):
         self.tree = ttk.Treeview(self.root, columns=('first name', 'last name', 'birth number'), show='headings')
