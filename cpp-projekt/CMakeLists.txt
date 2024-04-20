@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(budget_tracker VERSION 0.1 LANGUAGES CXX)
+project(shop_system VERSION 0.1 LANGUAGES CXX)
 
 
 set(CMAKE_AUTOUIC ON)
@@ -30,31 +30,31 @@ set(PROJECT_SOURCES
 
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(budget_tracker
+    qt_add_executable(shop_system
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET budget_tracker APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET shop_system APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(budget_tracker SHARED
+        add_library(shop_system SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(budget_tracker
+        add_executable(shop_system
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(budget_tracker PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(shop_system PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Core)
 
-set_target_properties(budget_tracker PROPERTIES
+set_target_properties(shop_system PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -62,12 +62,12 @@ set_target_properties(budget_tracker PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-install(TARGETS budget_tracker
+install(TARGETS shop_system
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(budget_tracker)
+    qt_finalize_executable(shop_system)
 endif()
