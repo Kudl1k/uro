@@ -5,17 +5,38 @@ ShopSystem::ShopSystem(QWidget *parent) : QMainWindow(parent)
     this->setWindowTitle("Shop System - KUD0132");
     this->setMinimumSize(1280, 720);
     this->move(100, 100);
+    generateProducts();
     QWidget *centralWidget = new QWidget(this);
     mainlayout = new QVBoxLayout(centralWidget);
     setup_menubar();
     setup_header();
     setup_table();
+    fillTableWithProducts();
     this->setCentralWidget(centralWidget);
 }
 
 void ShopSystem::showAlert(const QString &message)
 {
     QMessageBox::information(this, "Alert", message);
+}
+
+int ShopSystem::getNextId()
+{
+    return products.size() + 1;
+}
+
+void ShopSystem::generateProducts()
+{
+    this->products.push_back(Product(1, "iPhone 9", 549, 94, "Apple", "smartphones", "A1"));
+    this->products.push_back(Product(2, "iPhone X", 899, 34, "Apple", "smartphones", "A2"));
+    this->products.push_back(Product(3, "Samsung Universe 9", 1249, 36, "Samsung", "smartphones", "A3"));
+    this->products.push_back(Product(4, "OPPOF19", 280, 123, "OPPO", "smartphones", "A4"));
+    this->products.push_back(Product(5, "Huawei P30", 499, 32, "Huawei", "smartphones", "B1"));
+    this->products.push_back(Product(6, "MacBook Pro", 1749, 83, "Apple", "laptops", "B2"));
+    this->products.push_back(Product(7, "Samsung Galaxy Book", 1499, 50, "Samsung", "laptops", "B3"));
+    this->products.push_back(Product(8, "Microsoft Surface Laptop 4", 1499, 68, "Microsoft Surface", "laptops", "B4"));
+    this->products.push_back(Product(9, "Infinix INBOOK", 1099, 96, "Infinix", "laptops", "C1"));
+    this->products.push_back(Product(10, "HP Pavilion 15-DK1056WM", 1099, 89, "HP Pavilion", "laptops", "C2"));
 }
 
 void ShopSystem::setup_menubar()
@@ -38,6 +59,8 @@ void ShopSystem::setup_header()
     QPushButton *addProduct = new QPushButton("Add Product");
     headerlayout->addWidget(addProduct);
     mainlayout->addLayout(headerlayout);
+
+    connect(addProduct, &QPushButton::clicked, this, &ShopSystem::openAddProductWindow);
 }
 
 void ShopSystem::setup_search()
@@ -93,7 +116,7 @@ void ShopSystem::setup_table()
 {
     QTableView *tableView = new QTableView(this);
 
-    QStandardItemModel *model = new QStandardItemModel(0, 7, this);
+    model = new QStandardItemModel(0, 7, this);
     model->setHeaderData(0, Qt::Horizontal, tr("id"));
     model->setHeaderData(1, Qt::Horizontal, tr("title"));
     model->setHeaderData(2, Qt::Horizontal, tr("price"));
@@ -113,4 +136,139 @@ void ShopSystem::setup_table()
     tableView->setColumnWidth(6, 75);
 
     mainlayout->addWidget(tableView);
+}
+
+void ShopSystem::fillTableWithProducts()
+{
+    model->removeRows(0, model->rowCount());
+
+    for (const auto &product : products)
+    {
+        QStandardItem *idItem = new QStandardItem(QString::number(product.getId()));
+        QStandardItem *titleItem = new QStandardItem(QString::fromStdString(product.getTitle()));
+        QStandardItem *priceItem = new QStandardItem(QString::number(product.getPrice()));
+        QStandardItem *stockItem = new QStandardItem(QString::number(product.getStock()));
+        QStandardItem *brandItem = new QStandardItem(QString::fromStdString(product.getBrand()));
+        QStandardItem *categoryItem = new QStandardItem(QString::fromStdString(product.getCategory()));
+        QStandardItem *placementItem = new QStandardItem(QString::fromStdString(product.getPlacement()));
+
+        QList<QStandardItem *> items = {idItem, titleItem, priceItem, stockItem, brandItem, categoryItem, placementItem};
+        model->appendRow(items);
+    }
+}
+
+void ShopSystem::addProduct(Product *product)
+{
+    products.push_back(*product);
+}
+
+void ShopSystem::openAddProductWindow()
+{
+    addProductDialog = new AddProductDialog(this, this);
+    addProductDialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    connect(addProductDialog, &QDialog::finished, addProductDialog, &QObject::deleteLater);
+    addProductDialog->show();
+}
+
+AddProductDialog::AddProductDialog(QWidget *parent, ShopSystem *s) : QDialog(parent)
+{
+    setWindowTitle("Add Product");
+    this->setMinimumSize(400, 480);
+    this->move(100, 100);
+    QVBoxLayout *mainlayout = new QVBoxLayout;
+
+    QFormLayout *formLayout = new QFormLayout;
+
+    QLineEdit *titleEdit = new QLineEdit;
+    QLineEdit *priceEdit = new QLineEdit;
+    QLineEdit *stockEdit = new QLineEdit;
+    QLineEdit *brandEdit = new QLineEdit;
+    QLineEdit *categoryEdit = new QLineEdit;
+    QLineEdit *placementEdit = new QLineEdit;
+
+    QDoubleValidator *doubleValidator = new QDoubleValidator(0, 1000000, 2, this);
+    priceEdit->setValidator(doubleValidator);
+
+    QIntValidator *intValidator = new QIntValidator(0, 1000000, this);
+    stockEdit->setValidator(intValidator);
+
+    formLayout->addRow("Title:", titleEdit);
+    formLayout->addRow("Price:", priceEdit);
+    formLayout->addRow("Stock:", stockEdit);
+    formLayout->addRow("Brand:", brandEdit);
+    formLayout->addRow("Category:", categoryEdit);
+    formLayout->addRow("Placement:", placementEdit);
+
+    mainlayout->addLayout(formLayout);
+
+    QPushButton *addphotos = new QPushButton();
+    addphotos->setMaximumWidth(200);
+    addphotos->setText("Add Photos");
+    QHBoxLayout *buttonLayout1 = new QHBoxLayout();
+    buttonLayout1->addStretch(1);
+    buttonLayout1->addWidget(addphotos);
+    buttonLayout1->addStretch(1);
+    mainlayout->addLayout(buttonLayout1);
+
+    QScrollArea *scrollArea = new QScrollArea(this);
+    QWidget *scrollWidget = new QWidget(scrollArea);
+    QHBoxLayout *imageLayout = new QHBoxLayout(scrollWidget);
+
+    QPixmap image1("../images/logo.jpg");
+    QPixmap image2("../images/logo.jpg");
+    QPixmap image3("../images/logo.jpg");
+    QPixmap image4("../images/logo.jpg");
+    QPixmap image5("../images/logo.jpg");
+
+    QLabel *imageLabel1 = new QLabel();
+    QLabel *imageLabel2 = new QLabel();
+    QLabel *imageLabel3 = new QLabel();
+    QLabel *imageLabel4 = new QLabel();
+    QLabel *imageLabel5 = new QLabel();
+
+    imageLabel1->setPixmap(image1.scaledToHeight(200, Qt::SmoothTransformation));
+    imageLabel2->setPixmap(image2.scaledToHeight(200, Qt::SmoothTransformation));
+    imageLabel3->setPixmap(image3.scaledToHeight(200, Qt::SmoothTransformation));
+    imageLabel4->setPixmap(image4.scaledToHeight(200, Qt::SmoothTransformation));
+    imageLabel5->setPixmap(image5.scaledToHeight(200, Qt::SmoothTransformation));
+
+    imageLayout->addWidget(imageLabel1);
+    imageLayout->addWidget(imageLabel2);
+    imageLayout->addWidget(imageLabel3);
+    imageLayout->addWidget(imageLabel4);
+    imageLayout->addWidget(imageLabel5);
+
+    scrollWidget->setLayout(imageLayout);
+    scrollArea->setWidget(scrollWidget);
+
+    mainlayout->addWidget(scrollArea);
+
+    QPushButton *addProduct = new QPushButton("Add Product");
+    addProduct->setMaximumWidth(200);
+
+    QHBoxLayout *buttonLayout2 = new QHBoxLayout();
+    buttonLayout2->addStretch(1);
+    buttonLayout2->addWidget(addProduct);
+    buttonLayout2->addStretch(1);
+
+    mainlayout->addLayout(buttonLayout2);
+
+    this->setLayout(mainlayout);
+
+    connect(addphotos, &QPushButton::clicked, this, [=]()
+            { s->showAlert("Pick photos"); });
+
+    connect(addProduct, &QPushButton::clicked, this, [=]()
+            {
+        QString title = titleEdit->text();
+        double price = priceEdit->text().toDouble();
+        int stock = stockEdit->text().toInt();
+        QString brand = brandEdit->text();
+        QString category = categoryEdit->text();
+        QString placement = placementEdit->text();
+        Product *newproduct = new Product(s->getNextId(),title.toStdString(),price,stock,brand.toStdString(),category.toStdString(),placement.toStdString());
+        s->addProduct(newproduct);
+        s->fillTableWithProducts();
+        
+        this->close(); });
 }
