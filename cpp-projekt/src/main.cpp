@@ -1,16 +1,13 @@
 #include <QApplication>
-#include <QWidget>
-#include <QLabel>
+#include "shopsystem.h"
 
 int main(int argc, char **argv)
 {
     QApplication *app = new QApplication(argc, argv);
 
-    QWidget *hello = new QWidget();
+    ShopSystem *s = new ShopSystem(new QWidget);
 
-    QLabel *world = new QLabel("Hello World", hello);
-
-    hello->show();
+    s->show();
 
     return app->exec();
 }
