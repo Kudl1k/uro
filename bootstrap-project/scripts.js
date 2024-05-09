@@ -45,7 +45,7 @@ function fillTable(){
     let table_content = ""
 
     dataList.forEach(element => {
-        table_content += `<tr>
+        table_content += `<tr onclick="location.href='edit_product.html?id=${element.id}'" style="cursor: pointer;">
         <th scope="row">${element.id}</th>
         <td>${element.title}</td>
         <td>${element.price}</td>
@@ -89,4 +89,13 @@ fetchdata().then(() => {
         numbersel.appendChild(option)
     })
 });
+
+document.getElementById('edit-photos-button').addEventListener('click', () => {
+    window.alert('insert photos')  
+})
+document.getElementById('add-product-button').addEventListener('click', () => {
+    window.alert('product added')  
+})
+
+
 
